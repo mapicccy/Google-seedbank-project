@@ -5,3 +5,4 @@ Collection of Interactive Machine Learning Examples. We call them "seeds". Each 
 These seeds are very useful across the industry and academia. 
 
 Enjoy this project! 
+ 
