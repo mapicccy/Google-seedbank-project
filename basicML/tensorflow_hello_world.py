@@ -5,6 +5,8 @@ try:
     tf.contrib.eager.enable_eager_execution()
 except ValueError:
     print('value error!')
+else:
+    print(tf.executing_eagerly())
 
 graph = tf.Graph()
 with graph.as_default():
