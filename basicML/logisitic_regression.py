@@ -16,7 +16,8 @@ tf.logging.set_verbosity(tf.logging.ERROR)
 pd.options.display.max_rows = 10
 pd.options.display.float_format = '{:.1f}'.format
 
-california_housing_dataframe = pd.read_csv("https://download.mlcc.google.com/mledu-datasets/california_housing_train.csv", sep=",")
+california_housing_dataframe = pd.read_csv(
+    "https://download.mlcc.google.com/mledu-datasets/california_housing_train.csv", sep=",")
 
 california_housing_dataframe = california_housing_dataframe.reindex(
     np.random.permutation(california_housing_dataframe.index))
@@ -44,8 +45,8 @@ def preprocess_features(california_housing_dataframe):
     processed_features = selected_features.copy()
     # Create a synthetic feature.
     processed_features["rooms_per_person"] = (
-            california_housing_dataframe["total_rooms"] /
-            california_housing_dataframe["population"])
+        california_housing_dataframe["total_rooms"] /
+        california_housing_dataframe["population"])
     return processed_features
 
 
@@ -62,11 +63,12 @@ def preprocess_targets(california_housing_dataframe):
     # Create a boolean categorical feature representing whether the
     # median_house_value is above a set threshold.
     output_targets["median_house_value_is_high"] = (
-            california_housing_dataframe["median_house_value"] > 265000).astype(float)
+        california_housing_dataframe["median_house_value"] > 265000).astype(float)
     return output_targets
 
 
 # Choose the first 12000 (out of 17000) examples for training.
+print('initial dataframe:\n', california_housing_dataframe.head(10))
 training_examples = preprocess_features(california_housing_dataframe.head(12000))
 training_targets = preprocess_targets(california_housing_dataframe.head(12000))
 
@@ -84,3 +86,37 @@ print("Training targets summary:")
 display.display(training_targets.describe())
 print("Validation targets summary:")
 display.display(validation_targets.describe())
+
+
+def construct_feature_columns(input_features):
+    """Construct the TensorFlow Feature Columns.
+
+    Args:
+        input_features: The name of the numerical input features to use.
+    Returns:
+        A set of feature columns
+    """
+    return set([tf.feature_column.numeric_column(my_feature) for my_feature in input_features])
+
+
+def my_input_fn(features, targets, batch_size=1, shuffle=True, num_epochs=None):
+    """Trains a linear regression model.
+
+    :param features: pandas DataFrame of features
+    :param targets: pandas DataFrame of targets
+    :param batch_size: Size of batches to be passed to the model
+    :param shuffle: True or False. Whether to shuffle the data
+    :param num_epochs: Numbers of epochs for which data should be repeated. None=repeat indefinitely
+    :return:
+        Tuple of (features, labels) for next data batch
+    """
+    features = {key: np.array(value) for key, value in dict(features).items()}
+
+    ds = Dataset.from_tensor_slices((features, targets))
+    ds = ds.batch(batch_size).repeat(num_epochs)
+    
+    if shuffle:
+        ds = ds.shuffle(10000)
+
+    features, labels = ds.make_one_shot_iterator().get_next()
+    return features, labels
