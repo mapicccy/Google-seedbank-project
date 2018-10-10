@@ -114,7 +114,7 @@ def my_input_fn(features, targets, batch_size=1, shuffle=True, num_epochs=None):
 
     ds = Dataset.from_tensor_slices((features, targets))
     ds = ds.batch(batch_size).repeat(num_epochs)
-    
+
     if shuffle:
         ds = ds.shuffle(10000)
 
